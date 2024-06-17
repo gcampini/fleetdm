@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  fleet:
+    image: fleetdm/fleet:v4.11.0
+    command: sh -c "/usr/bin/fleet prepare db --config /etc/fleet/fleet.yml && /usr/bin/fleet serve --config /etc/fleet/fleet.yml"
+    configs:
+      - source: fleetdm-config
+        target: /etc/fleet/fleet.yml
+    ports:
+      - "50000:80"
+    secrets:
+      - mysql-fleetdm-password
+      - fleetdm-jwt-key
+      - fleetdm-tls-cert
+      - fleetdm-tls-key
+    networks: 
+      - fleet-backend
+    depends_on:
+      - mysql
+      - redis
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 10
+        window: 120s
+  mysql:
+    image: mysql:8.0.27
+    environment: 
+      MYSQL_ROOT_PASSWORD_FILE: "/run/secrets/mysql-root-password"
+      MYSQL_PASSWORD_FILE: "/run/secrets/mysql-fleetdm-password"
+      MYSQL_DATABASE: "fleet"
+      MYSQL_USER: "fleet"
+    secrets:
+      - mysql-root-password
+      - mysql-fleetdm-password
+    volumes: 
+      - /vol/fleetdm/mysql:/var/lib/mysql
+    networks: 
+      - fleet-backend
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: '300M'
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+  redis:
+    image: redis:6.2.6-alpine
+    networks: 
+      - fleet-backend
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+
+networks:
+  fleet-backend:
+
+configs:
+  mysql-fleetdm-config:
+    file: ./fleetdm.cnf
+  fleetdm-config:
+    file: ./fleetdm.yml
+
+secrets:
+  mysql-root-password:
+    external: true
+  mysql-fleetdm-password:
+    external: true
+  fleetdm-jwt-key:
+    external: true
