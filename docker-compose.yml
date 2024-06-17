@@ -12,8 +12,6 @@ services:
     secrets:
       - mysql-fleetdm-password
       - fleetdm-jwt-key
-      - fleetdm-tls-cert
-      - fleetdm-tls-key
     networks: 
       - fleet-backend
     depends_on:
