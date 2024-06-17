@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   fleet:
-    image: fleetdm/fleet:v4.11.0
+    image: fleetdm/fleet:v4
     command: sh -c "/usr/bin/fleet prepare db --config /etc/fleet/fleet.yml && /usr/bin/fleet serve --config /etc/fleet/fleet.yml"
     configs:
       - source: fleetdm-config
