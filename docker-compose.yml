@@ -41,9 +41,11 @@ services:
       - mysql-root-password
       - mysql-fleetdm-password
     volumes: 
-      - /vol/fleetdm/mysql:/var/lib/mysql
+      - "/vol/fleetdm/mysql:/var/lib/mysql"
     networks: 
       - fleet-backend
+    cap_add:
+      - SYS_NICE
     deploy:
       resources:
         limits:
